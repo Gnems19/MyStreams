@@ -91,8 +91,6 @@ public class MyStream<T>{
             func.accept(iterator.next());
         }
     }
-    // TODO implement myCount
-
     public long myCount(){
         long count = 0;
         while(iterator.hasNext()){
@@ -116,13 +114,66 @@ public class MyStream<T>{
     }
 
     public Optional<T> myMax(Comparator<T> comparator){
-        return myReduce((x,y) -> comparator.compare(x,y) > 0?x:y);
+        return myReduce((x,y) -> comparator.compare(x,y) > 0 ? x : y);
     }
 
-    // TODO implement myFindFirst
-    // TODO implement myFindAny
-    // TODO implement myAllMatch
-    // TODO implement myAnyMatch
-    // TODO implement myNoneMatch
-    // TODO implement myCollect
+    public Optional<T> myFindFirst(){
+        if(iterator.hasNext()){
+            return Optional.of(iterator.next());
+        }
+        return Optional.empty();
+    }
+
+    public MyStream<T> myLimit(long n){
+        return new MyStream<>(
+            new Iterable<>() {
+                @Override
+                public Iterator<T> iterator() {
+                    return new Iterator<>() {
+                        private long count = 0;
+                        @Override
+                        public boolean hasNext() {
+                            return iterator.hasNext() && count < n;
+                        }
+                        @Override
+                        public T next() { // test for asking too much
+                            count++;
+                            return iterator.next();
+                        }
+                    };
+                }
+            }
+        );
+    }
+
+    public MyStream<T> mySkip(long n){
+        return new MyStream<>(
+                new Iterable<>() {
+                    @Override
+                    public Iterator<T> iterator() {
+                        return new Iterator<>() {
+                            T nextElement;
+                            private long count = 0;
+                            @Override
+                            public boolean hasNext() {
+                                while(iterator.hasNext()){
+                                    if(count >= n) return true;
+                                    count++;
+                                    nextElement = iterator.next();
+                                }
+                                return false;
+                            }
+
+                            @Override
+                            public T next() {
+                                if(hasNext()){
+                                    return nextElement;
+                                }
+                                return null;
+                            }
+                        };
+                    }
+                }
+        );
+    }
 }

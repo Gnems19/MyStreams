@@ -177,5 +177,40 @@ public class MyStreamTest {
         assertEquals(expected2, actual2);
     }
 
+    @Test
+    void myFindFirst(){
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .findFirst();
+        var actual = myStream
+                .myFindFirst();
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        myStream = new MyStream<>(collection);
+        expected = collection.stream()
+                .filter(x -> x % 2 == 1)
+                .findFirst();
+        actual = myStream
+                .myFilter(x -> x % 2 == 1)
+                .myFindFirst();
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        Collection<String> emptyCollection = List.of();
+        var expected2 = emptyCollection.stream()
+                .findFirst();
+        var actual2 = new MyStream<>(emptyCollection)
+                .myFindFirst();
+        System.out.println(actual2);
+        System.out.println(expected2);
+        assertEquals(expected2, actual2);
+        // DRY!
+
+    }
+
 
 }
