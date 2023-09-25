@@ -1,90 +1,124 @@
 package mystreams;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.*;
 
-public class MyStream<T, R>{
-
-    // have an iterator of generic type
-    // and a constructor that takes iterable and gets its iterator
-
+public class MyStream<T>{
     private final Iterator<T> iterator;
 
     public MyStream(Iterable<T> elements){ // it might be better to return iterator instead or maybe figure out a way to keep both
-        iterator = elements.iterator();
+        this.iterator = elements.iterator();
     }
+    public <R> MyStream<R> myMap(Function<T, R> mapper){
+        return new MyStream<>(
+                new Iterable<>()
+                {
+                    @Override
+                    public Iterator<R> iterator() {
+                        return new Iterator<>(){
+                            @Override
+                            public boolean hasNext(){
+                                return iterator.hasNext();
+                            }
 
-    public Iterator<R> myMap(Function<T, R> func){
-        // custom iterator for map
-        return new Iterator<R>(){
-            @Override
-            public boolean hasNext(){
-                return iterator.hasNext();
-            }
-
-            @Override
-            public R next(){
-                return func.apply(iterator.next());
-            }
-        };
-    }
-
-    public Iterator<T> myFilter(Function<T, Boolean> func){
-        // custom iterator for filter
-        return new Iterator<T>(){
-            @Override
-            public boolean hasNext(){
-                return iterator.hasNext();
-            }
-
-            @Override
-            public T next(){
-                T element = iterator.next();
-                while(!func.apply(element)){
-                    element = iterator.next();
+                            @Override
+                            public R next(){
+                                return mapper.apply(iterator.next());
+                            }
+                        };
+                    }
                 }
-                return element;
-            }
-        };
+        );
     }
-
-    public T myReduce(Function<T, T> func){
-        // override iterator interface methods to create a custom iterator for reduce
-        T result = iterator.next();
+    public MyStream<T> myFilter(Predicate<T> predicate){
+        return new MyStream<>(
+            new Iterable<>() {
+                @Override
+                public Iterator<T> iterator() {
+                    return new Iterator<>() {
+                        private T nextElement;
+                        private boolean unused = false;
+                        @Override
+                        public boolean hasNext() {
+                            if(unused){
+                                return true;
+                            }
+                            while(iterator.hasNext()){
+                                nextElement = iterator.next();
+                                if(predicate.test(nextElement)){
+                                    unused = true;
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        @Override
+                        public T next() {
+                            if(unused){
+                                unused = false;
+                                return nextElement;
+                            }
+                            nextElement = iterator.next();
+                            return predicate.test(nextElement) ? nextElement : next();
+                        }
+                    };
+                }
+            }
+        );
+    }
+    public T myReduce(T identity, BinaryOperator<T> accumulator) {
+        T result = identity;
         while(iterator.hasNext()){
-            result = func.apply(result);
+            result = accumulator.apply(result, iterator.next());
         }
         return result;
     }
-
+    public Optional<T> myReduce(BinaryOperator<T> accumulator) {
+        if(iterator.hasNext()){
+            T result = iterator.next();
+            while(iterator.hasNext()){
+                result = accumulator.apply(result, iterator.next());
+            }
+            return Optional.of(result);
+        }
+        return Optional.empty();
+    }
+    public Iterator<T> iterator(){
+        return this.iterator;
+    }
     public void forEach(Consumer<T> func){
-        // override iterator interface methods to create a custom iterator for forEach
         while(iterator.hasNext()){
             func.accept(iterator.next());
         }
     }
 
-//    public T max(Function<T, T, Boolean> comparator){
-//        // override iterator interface methods to create a custom iterator for max
-//        T max = iterator.next();
-//        this.myReduce()
-//        return max;
-//    }
-
     public static void main(String[] args) {
         // create an array from 1 to 10
         int[] numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9 ,10};
         List<Integer> listOfNumbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10);
-
-        System.out.println(Arrays.stream(numbers).reduce((x, y) -> x + y));
-        System.out.println(Arrays.stream(numbers).reduce((x, y) -> x * y));
-        // lambda for adding 1
         Function<Integer, Integer> addOne = x -> x + 1;
+
+        String[] numbersAsStrings = {"1", "2", "3", "4", "5", "6", "7", "8", "9" ,"10"};
+
+        Arrays.stream(numbersAsStrings)
+                .map(Integer::parseInt)
+                .map(addOne)
+                .filter(x -> x > 5)
+                .forEach(System.out::print);
+        System.out.println();
+        new MyStream<>(Arrays.asList(numbersAsStrings))
+                .myMap(Integer::parseInt)
+                .myMap(addOne)
+                .myFilter(x -> x > 5)
+                .forEach(System.out::print);
+        System.out.println();
+
+
+        System.out.println(Arrays.stream(numbers).reduce(Integer::sum));
+        System.out.println(Arrays.stream(numbers).reduce((x, y) -> x * y));
+
         listOfNumbers.stream().map(addOne).forEach(System.out::print);
         System.out.println();
-        new MyStream<Integer, Integer>(listOfNumbers).myMap(addOne).forEachRemaining(System.out::print);
+        listOfNumbers.stream().filter(x -> x % 2 == 0).forEach(System.out::print);
     }
 }
