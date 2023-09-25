@@ -86,11 +86,12 @@ public class MyStream<T>{
     public Iterator<T> iterator(){
         return this.iterator;
     }
-    public void forEach(Consumer<T> func){
+    public void myForEach(Consumer<T> func){
         while(iterator.hasNext()){
             func.accept(iterator.next());
         }
     }
+
 
     public static void main(String[] args) {
         // create an array from 1 to 10
@@ -110,7 +111,7 @@ public class MyStream<T>{
                 .myMap(Integer::parseInt)
                 .myMap(addOne)
                 .myFilter(x -> x > 5)
-                .forEach(System.out::print);
+                .myForEach(System.out::print);
         System.out.println();
 
 
