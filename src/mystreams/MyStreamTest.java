@@ -3,6 +3,7 @@ package mystreams;
 import org.testng.annotations.Test;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -84,7 +85,6 @@ public class MyStreamTest {
         System.out.println(expected.get());
         assertEquals(expected, actual);
 
-        // reduce returns if there is a odd number of even elements in the list or not
         myStream = new MyStream<>(collection);
         boolean exp = collection.stream()
                 .map(x -> x % 2 == 0)
@@ -96,6 +96,85 @@ public class MyStreamTest {
         System.out.println(act);
         System.out.println(exp);
         assertEquals(act, exp);
+    }
+
+    @Test
+    void myCount() {
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .filter(x -> x % 2 == 0)
+                .count();
+        var actual = myStream.myCount();
+        System.out.println(actual);
+        System.out.println(expected);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void myMin(){
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .min(Integer::compareTo);
+        var actual = myStream
+                .myMin(Integer::compareTo);
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        myStream = new MyStream<>(collection);
+        expected = collection.stream()
+                .filter(x -> x % 2 == 0)
+                .min(Integer::compareTo);
+        actual = myStream
+                .myFilter(x -> x % 2 == 0)
+                .myMin(Integer::compareTo);
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        Collection<String> emptyCollection = List.of();
+        var expected2 = emptyCollection.stream()
+                .min(String::compareTo);
+        var actual2 = new MyStream<>(emptyCollection)
+                .myMin(String::compareTo);
+        System.out.println(actual2);
+        System.out.println(expected2);
+        assertEquals(expected2, actual2);
+    }
+
+    @Test
+    void myMax(){
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .max(Integer::compareTo);
+        var actual = myStream
+                .myMax(Integer::compareTo);
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        myStream = new MyStream<>(collection);
+        expected = collection.stream()
+                .filter(x -> x % 2 == 1)
+                .max(Integer::compareTo);
+        actual = myStream
+                .myFilter(x -> x % 2 == 1)
+                .myMax(Integer::compareTo);
+        System.out.println(actual.get());
+        System.out.println(expected.get());
+        assertEquals(expected, actual);
+
+        Collection<String> emptyCollection = List.of();
+        var expected2 = emptyCollection.stream()
+                .max(String::compareTo);
+        var actual2 = new MyStream<>(emptyCollection)
+                .myMax(String::compareTo);
+        System.out.println(actual2);
+        System.out.println(expected2);
+        assertEquals(expected2, actual2);
     }
 
 
