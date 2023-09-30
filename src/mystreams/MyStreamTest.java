@@ -12,6 +12,7 @@ public class MyStreamTest {
     void myForEach() {
         Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
         MyStream<Integer> myStream = new MyStream<>(collection);
+        System.out.println("\nTEST :: FOREACH");
         collection.forEach(System.out::print);
         myStream.myForEach(System.out::print);
     }
@@ -32,7 +33,7 @@ public class MyStreamTest {
                 .myMap(Object::toString)
                 .myMap(x -> x + 1)
                 .myMap(x -> x + " ");
-
+        System.out.println("\nTEST :: MAP");
         actual.myForEach(System.out::print);
         System.out.println();
         expected.forEach(System.out::print);
@@ -53,6 +54,7 @@ public class MyStreamTest {
                 .myFilter(x -> x < 8)
                 .myFilter(x -> x % 2 == 0)
                 .myMap(x -> x + " ");
+        System.out.println("\nTEST :: FILTER");
         actual.myForEach(System.out::print);
         System.out.println();
         expected.forEach(System.out::print);
@@ -93,6 +95,7 @@ public class MyStreamTest {
         boolean act = myStream
                 .myMap(x -> x % 2 == 0)
                 .myReduce(false, (x, y) -> x ^ y);
+        System.out.println("\nTEST :: REDUCE");
         System.out.println(act);
         System.out.println(exp);
         assertEquals(act, exp);
@@ -105,7 +108,11 @@ public class MyStreamTest {
         var expected = collection.stream()
                 .filter(x -> x % 2 == 0)
                 .count();
-        var actual = myStream.myCount();
+        var actual = myStream
+                .myFilter(x -> x % 2 == 0)
+                .myCount();
+        System.out.println("\nTEST :: COUNT");
+
         System.out.println(actual);
         System.out.println(expected);
         assertEquals(expected, actual);
@@ -139,6 +146,8 @@ public class MyStreamTest {
                 .min(String::compareTo);
         var actual2 = new MyStream<>(emptyCollection)
                 .myMin(String::compareTo);
+        System.out.println("\nTEST :: MIN");
+
         System.out.println(actual2);
         System.out.println(expected2);
         assertEquals(expected2, actual2);
@@ -172,6 +181,8 @@ public class MyStreamTest {
                 .max(String::compareTo);
         var actual2 = new MyStream<>(emptyCollection)
                 .myMax(String::compareTo);
+        System.out.println("\nTEST :: MAX");
+
         System.out.println(actual2);
         System.out.println(expected2);
         assertEquals(expected2, actual2);
@@ -205,11 +216,49 @@ public class MyStreamTest {
                 .findFirst();
         var actual2 = new MyStream<>(emptyCollection)
                 .myFindFirst();
+        System.out.println("\nTEST :: FINDFIRST");
         System.out.println(actual2);
         System.out.println(expected2);
         assertEquals(expected2, actual2);
-        // DRY!
+    }
 
+    @Test
+    public void myDistinct() {
+        Collection<Integer> collection = Arrays.asList(1, 1, 1, 1, 1, 2);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream().distinct();
+        var actual = myStream.myDistinct();
+        System.out.println("\nTEST :: DISTINCT");
+        expected.forEach(x -> System.out.print(x + " "));
+        System.out.println();
+        actual.myForEach(x -> System.out.print(x + " "));
+    }
+
+    @Test
+    public void mySkip(){
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .skip(3);
+        var actual = myStream
+                .mySkip(3);
+        System.out.println("\nTEST :: SKIP");
+        expected.forEach(x -> System.out.print(x + " "));
+        System.out.println();
+        actual.myForEach(x -> System.out.print(x + " "));
+    }
+    @Test
+    public void myLimit(){
+        Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        MyStream<Integer> myStream = new MyStream<>(collection);
+        var expected = collection.stream()
+                .limit(3);
+        var actual = myStream
+                .myLimit(3);
+        System.out.println("\nTEST :: LIMIT");
+        expected.forEach(x -> System.out.print(x + " "));
+        System.out.println();
+        actual.myForEach(x -> System.out.print(x + " "));
     }
 
 

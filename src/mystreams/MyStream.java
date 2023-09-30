@@ -37,16 +37,16 @@ public class MyStream<T>{
                 public Iterator<T> iterator() {
                     return new Iterator<>() {
                         private T nextElement;
-                        private boolean unused = false;
+                        private boolean nextElementUnused = false;
                         @Override
                         public boolean hasNext() {
-                            if(unused){
+                            if(nextElementUnused){
                                 return true;
                             }
                             while(iterator.hasNext()){
                                 nextElement = iterator.next();
                                 if(predicate.test(nextElement)){
-                                    unused = true;
+                                    nextElementUnused = true;
                                     return true;
                                 }
                             }
@@ -54,12 +54,17 @@ public class MyStream<T>{
                         }
                         @Override
                         public T next() {
-                            if(unused){
-                                unused = false;
+
+                            if(nextElementUnused){
+                                nextElementUnused = false;
                                 return nextElement;
                             }
-                            nextElement = iterator.next();
-                            return predicate.test(nextElement) ? nextElement : next();
+
+                            do {
+                                nextElement = iterator.next();
+                            }while(!predicate.test(nextElement));
+
+                            return nextElement;
                         }
                     };
                 }
@@ -83,6 +88,7 @@ public class MyStream<T>{
         }
         return Optional.empty();
     }
+
     public Iterator<T> iterator(){
         return this.iterator;
     }
@@ -136,7 +142,7 @@ public class MyStream<T>{
                             return iterator.hasNext() && count < n;
                         }
                         @Override
-                        public T next() { // test for asking too much
+                        public T next() {
                             count++;
                             return iterator.next();
                         }
@@ -152,28 +158,65 @@ public class MyStream<T>{
                     @Override
                     public Iterator<T> iterator() {
                         return new Iterator<>() {
-                            T nextElement;
                             private long count = 0;
                             @Override
                             public boolean hasNext() {
-                                while(iterator.hasNext()){
-                                    if(count >= n) return true;
+                                while(iterator.hasNext() && count < n){
+                                    iterator.next();
                                     count++;
-                                    nextElement = iterator.next();
                                 }
-                                return false;
+                                return iterator.hasNext();
                             }
-
                             @Override
                             public T next() {
-                                if(hasNext()){
-                                    return nextElement;
+                                while(iterator.hasNext() && count < n){
+                                    iterator.next();
+                                    count++;
                                 }
-                                return null;
+                                return iterator.next();
                             }
                         };
                     }
                 }
         );
+    }
+
+    public MyStream<T> myDistinct(){
+        return new MyStream<>(new Iterable<>(){
+            @Override
+            public Iterator<T> iterator() {
+                return new Iterator<>() {
+                    private final Set<T> set = new HashSet<>();
+                    private T nextElement;
+                    private boolean nextElementUnused = false;
+                    @Override
+                    public boolean hasNext(){
+                        if(nextElementUnused){
+                            return true;
+                        }
+                        while(iterator.hasNext()){
+                            nextElement = iterator.next();
+                            if(set.add(nextElement)){
+                                nextElementUnused = true;
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public T next() {
+                        if (nextElementUnused) {
+                            nextElementUnused = false;
+                            return nextElement;
+                        }
+                        do{
+                            nextElement = iterator.next();
+                        }while (!set.add(nextElement));
+                        return nextElement;
+                    }
+                };
+            }
+        });
     }
 }
