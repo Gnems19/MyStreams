@@ -54,12 +54,10 @@ public class MyStream<T>{
                         }
                         @Override
                         public T next() {
-
                             if(nextElementUnused){
                                 nextElementUnused = false;
                                 return nextElement;
                             }
-
                             do {
                                 nextElement = iterator.next();
                             }while(!predicate.test(nextElement));
@@ -78,6 +76,13 @@ public class MyStream<T>{
         }
         return result;
     }
+    public <R> R myReduce(R identity, BiFunction<R, T, R> accumulator) {
+        R result = identity;
+        while(iterator.hasNext()){
+            result = accumulator.apply(result, iterator.next());
+        }
+        return result;
+    }
     public Optional<T> myReduce(BinaryOperator<T> accumulator) {
         if(iterator.hasNext()){
             T result = iterator.next();
@@ -88,7 +93,6 @@ public class MyStream<T>{
         }
         return Optional.empty();
     }
-
     public Iterator<T> iterator(){
         return this.iterator;
     }
@@ -105,18 +109,9 @@ public class MyStream<T>{
         }
         return count;
     }
-    public Optional<T> myMin(Comparator<T> comparator){ // could have been implemented with reduce...
-        T minimumElement = null;
-        if(iterator().hasNext()){
-            minimumElement = iterator().next();
-        }
-        while(iterator().hasNext()){
-            T currentElement = iterator.next();
-            if(comparator.compare(currentElement,minimumElement) < 0){
-                minimumElement = currentElement;
-            }
-        }
-        return minimumElement == null?Optional.empty():Optional.of(minimumElement);
+
+    public Optional<T> myMin(Comparator<T> comparator){
+        return myReduce((x,y) -> comparator.compare(x,y) < 0 ? x : y);
     }
 
     public Optional<T> myMax(Comparator<T> comparator){
@@ -139,7 +134,7 @@ public class MyStream<T>{
                         private long count = 0;
                         @Override
                         public boolean hasNext() {
-                            return iterator.hasNext() && count < n;
+                            return count < n && iterator.hasNext();
                         }
                         @Override
                         public T next() {
@@ -157,22 +152,26 @@ public class MyStream<T>{
                 new Iterable<>() {
                     @Override
                     public Iterator<T> iterator() {
-                        return new Iterator<>() {
+                        return new Iterator<T>() {
                             private long count = 0;
-                            @Override
-                            public boolean hasNext() {
-                                while(iterator.hasNext() && count < n){
+                            private boolean find() throws NoSuchElementException {
+                                while(count < n){
                                     iterator.next();
                                     count++;
                                 }
                                 return iterator.hasNext();
                             }
                             @Override
-                            public T next() {
-                                while(iterator.hasNext() && count < n){
-                                    iterator.next();
-                                    count++;
+                            public boolean hasNext() {
+                                try {
+                                    return find();
+                                }catch (NoSuchElementException e){
+                                    return false;
                                 }
+                            }
+                            @Override
+                            public T next() {
+                                find();
                                 return iterator.next();
                             }
                         };
@@ -189,6 +188,7 @@ public class MyStream<T>{
                     private final Set<T> set = new HashSet<>();
                     private T nextElement;
                     private boolean nextElementUnused = false;
+
                     @Override
                     public boolean hasNext(){
                         if(nextElementUnused){

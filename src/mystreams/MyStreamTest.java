@@ -58,11 +58,15 @@ public class MyStreamTest {
         actual.myForEach(System.out::print);
         System.out.println();
         expected.forEach(System.out::print);
-
     }
     @Test
     void myReduce() {
         Collection<Integer> collection = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+        Collection<String> stringCollection = Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8");
+        var expected0 = stringCollection.stream()
+                .reduce("", (x, y) -> x + y);
+        var actual0 = new MyStream<>(stringCollection)
+                .myReduce("", (x, y) -> x + y);
         MyStream<Integer> myStream = new MyStream<>(collection);
         var expected = collection.stream()
                 .reduce(Integer::sum);
@@ -99,6 +103,11 @@ public class MyStreamTest {
         System.out.println(act);
         System.out.println(exp);
         assertEquals(act, exp);
+        boolean exp2 = collection.stream().reduce(true, (x, y) -> x ^ (y % 2 == 0), (x, y) -> x ^ y);
+        boolean act2 = myStream.myReduce(true, (x, y) -> x ^ (y % 2 == 0));
+        System.out.println(act2);
+        System.out.println(exp2);
+        assertEquals(act2, exp2);
     }
 
     @Test
@@ -246,6 +255,17 @@ public class MyStreamTest {
         expected.forEach(x -> System.out.print(x + " "));
         System.out.println();
         actual.myForEach(x -> System.out.print(x + " "));
+        try{
+            collection.stream().skip(10).forEach(System.out::println);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        try{
+            myStream.mySkip(10).myForEach(System.out::println);
+        } catch (Exception e) {
+
+            System.out.println(e.getMessage());
+        }
     }
     @Test
     public void myLimit(){
